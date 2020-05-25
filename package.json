@@ -1,0 +1,39 @@
+{
+  "name": "pavlovvr-rcon",
+  "version": "1.0.2",
+  "description": "",
+  "main": "init.js",
+  "dependencies": {
+    "desktop-screenshot": "^0.1.1",
+    "electron": "^8.1.1",
+    "fuzzy": "^0.1.3",
+    "hotkeys-js": "^3.7.6",
+    "inquirer-autocomplete-prompt": "^1.0.2",
+    "inquirer": "^7.1.0",
+    "iohook": "^0.6.5",
+    "lodash": "^4.17.15",
+    "node-powershell": "^4.0.0",
+    "node-process-windows": "^0.0.2",
+    "request": "^2.88.2",
+    "robotjs": "^0.6.0",
+    "screenshot-desktop": "^1.12.0",
+    "sharp": "^0.25.2",
+    "tcp-client": "^1.1.9",
+    "xmldom": "^0.3.0",
+    "xpath": "^0.0.27"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johndongus/PavlovVR-Rcon.git"
+  },
+  "author": "Celty/Carlos",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/johndongus/PavlovVR-Rcon/issues"
+  },
+  "homepage": "https://github.com/johndongus/PavlovVR-Rcon#readme"
+}
