@@ -67,12 +67,12 @@ function commandPrompt(socket) {
                 await commandHandler(socket, 'ResetSND')
                 commandPrompt(socket)
             }
-            if (selected.command === 'SwitchMap') {
+            /*if (selected.command === 'SwitchMap') {
 				map = await textPrompt('map', false)
 				mod = await textPrompt('mod', false)
 				await commandHandler(socket, 'SwitchMap ' + map + ' ' + mod)
 				commandPrompt(socket)
-            }
+	    }*/
             if (selected.command === 'Kick') {
                 playerPrompt(socket, selected.command)
             }
@@ -271,10 +271,10 @@ function spinServer(server) {
 }
 
 
-commands = [{
+commands = [/*{
     "name": "SwitchMap",
     "params": ["map", "mod"]
-}, {
+}, */{
     "name": "ResetSND",
     "params": []
 }, {
