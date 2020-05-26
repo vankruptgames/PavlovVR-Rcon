@@ -59,6 +59,20 @@ function commandPrompt(socket) {
         (async() => {
             //this is pretty bad, will change to command file for custom commands
             options = {}
+            if (selected.command === 'RotateMap') {
+                await commandHandler(socket, 'RotateMap')
+                commandPrompt(socket)
+            }
+            if (selected.command === 'ResetSND') {
+                await commandHandler(socket, 'ResetSND')
+                commandPrompt(socket)
+            }
+            if (selected.command === 'SwitchMap') {
+				map = await textPrompt('map', false)
+				mod = await textPrompt('mod', false)
+				await commandHandler(socket, 'SwitchMap ' + map + ' ' + mod)
+				commandPrompt(socket)
+            }
             if (selected.command === 'Kick') {
                 playerPrompt(socket, selected.command)
             }
@@ -203,7 +217,7 @@ function textPrompt(type, goBack) {
         inquirer.prompt([{
             message: "",
             type: "input",
-            name: "input",
+            name: "input " + type,
         }, ]).then(selected => {
             (async() => {
                 if (type === 'int' && selected.input.match(/^\d+$/)) {
@@ -215,9 +229,6 @@ function textPrompt(type, goBack) {
                 } else {
                     resolve(false)
                 }
-
-
-
             })();
         });
     });
@@ -261,6 +272,15 @@ function spinServer(server) {
 
 
 commands = [{
+    "name": "SwitchMap",
+    "params": ["map", "mod"]
+}, {
+    "name": "ResetSND",
+    "params": []
+}, {
+    "name": "RotateMap",
+    "params": []
+}, {
     "name": "Kick",
     "params": ["steamid"]
 }, {
