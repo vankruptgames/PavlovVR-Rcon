@@ -59,6 +59,22 @@ function commandPrompt(socket) {
         (async() => {
             //this is pretty bad, will change to command file for custom commands
             options = {}
+            if (selected.command === 'RotateMap') {
+                await commandHandler(socket, 'RotateMap')
+                commandPrompt(socket)
+            }
+            if (selected.command === 'ResetSND') {
+                await commandHandler(socket, 'ResetSND')
+                commandPrompt(socket)
+            }
+            if (selected.command === 'SwitchMap') {
+                map = await anyPrompt('map', true)
+                mod = await anyPrompt('mod', true)
+                cmd = 'SwitchMap ' + map + ' ' + mod
+                console.log(cmd)
+                commandHandler(socket, cmd)
+                commandPrompt(socket)
+            }
             if (selected.command === 'Kick') {
                 playerPrompt(socket, selected.command)
             }
@@ -203,7 +219,7 @@ function textPrompt(type, goBack) {
         inquirer.prompt([{
             message: "",
             type: "input",
-            name: "input",
+            name: "input " + type,
         }, ]).then(selected => {
             (async() => {
                 if (type === 'int' && selected.input.match(/^\d+$/)) {
@@ -215,9 +231,6 @@ function textPrompt(type, goBack) {
                 } else {
                     resolve(false)
                 }
-
-
-
             })();
         });
     });
@@ -225,6 +238,19 @@ function textPrompt(type, goBack) {
 
 }
 
+function anyPrompt(type, goBack) {
+    return new Promise(resolve => {
+        inquirer.prompt([{
+            message: "enter " + type,
+            type: "input",
+            name: "input",
+        }, ]).then(selected => {
+            (async() => {
+                resolve(selected.input)
+            })();
+        });
+    });
+}
 
 function reconnect(socket) {
     //reconnect on loss (max retries)
@@ -261,6 +287,15 @@ function spinServer(server) {
 
 
 commands = [{
+    "name": "SwitchMap",
+    "params": ["map", "mod"]
+}, {
+    "name": "ResetSND",
+    "params": []
+}, {
+    "name": "RotateMap",
+    "params": []
+}, {
     "name": "Kick",
     "params": ["steamid"]
 }, {
