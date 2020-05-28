@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 const net = require('net')
 const fs = require('fs');
-const fs = require('fs');
 var servFile = fs.readFileSync("./servers.json");var servers = JSON.parse(servFile);
 
 
