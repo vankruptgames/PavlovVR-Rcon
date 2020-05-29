@@ -1,7 +1,9 @@
 const inquirer = require('inquirer');
 const net = require('net')
 const fs = require('fs');
-var servFile = fs.readFileSync("./servers.json");var servers = JSON.parse(servFile);
+var servFile = fs.readFileSync("./servers.json");
+
+var servers = JSON.parse(servFile);
 
 
 serverPrompt()
@@ -30,9 +32,6 @@ function serverPrompt() {
         })();
 
     });
-
-
-
 }
 
 function commandHandler(socket, command, params) {
@@ -50,7 +49,6 @@ function commandHandler(socket, command, params) {
 }
 
 function commandPrompt(socket) {
-
     inquirer.prompt([{
         type: 'list',
         name: 'command',
@@ -60,22 +58,6 @@ function commandPrompt(socket) {
         (async() => {
             //this is pretty bad, will change to command file for custom commands
             options = {}
-            if (selected.command === 'RotateMap') {
-                await commandHandler(socket, 'RotateMap')
-                commandPrompt(socket)
-            }
-            if (selected.command === 'ResetSND') {
-                await commandHandler(socket, 'ResetSND')
-                commandPrompt(socket)
-            }
-            if (selected.command === 'SwitchMap') {
-                map = await anyPrompt('map', true)
-                mod = await anyPrompt('mod', true)
-                cmd = 'SwitchMap ' + map + ' ' + mod
-                console.log(cmd)
-                commandHandler(socket, cmd)
-                commandPrompt(socket)
-            }
             if (selected.command === 'Kick') {
                 playerPrompt(socket, selected.command)
             }
@@ -107,8 +89,6 @@ function commandPrompt(socket) {
                     commandPrompt(socket)
                 }
             }
-
-
             if (selected.command === 'GiveTeamCash') {
                 team = await teamPrompt()
                 cashAmt = await textPrompt('int', true)
@@ -125,6 +105,16 @@ function commandPrompt(socket) {
                 itemName = await textPrompt('string', true)
                 playerPrompt(socket, selected.command, itemName)
             }
+            if (selected.command === 'SetPlayerSkin') {
+                skinId = await textPrompt('string', true)
+                playerPrompt(socket, selected.command, skinId)
+            }
+            if (selected.command === 'SetLimitedAmmoType') {
+                selection = await textPrompt('int', true)
+            }
+            if (selected.command === 'ResetSND') {
+                commandHandler(socket, `ResetSND`)
+            }
             if (selected.command === 'GiveCash') {
                 itemName = await textPrompt('int', true)
                 playerPrompt(socket, selected.command, itemName)
@@ -133,12 +123,10 @@ function commandPrompt(socket) {
                 console.log(await commandHandler(socket, 'ServerInfo'))
                 commandPrompt(socket)
             }
-
             if (selected.command === 'RefreshList') {
                 await commandHandler(socket, 'RefreshList')
                 commandPrompt(socket)
             }
-
             if (selected.command === 'Disconnect') {
                 console.log('Disconnecting..')
                 socket.destroy();
@@ -180,11 +168,9 @@ function playerPrompt(socket, command, option, option2) {
             if (command === 'GiveItem') {
                 await commandHandler(socket, `GiveItem ${steam64Id} ${option}`)
             }
-            if (command === 'GiveCash') {
-                await commandHandler(socket, `GiveCash ${steam64Id} ${option}`)
+            if (command === 'SetPlayerSkin') {
+                await commandHandler(socket, `SetPlayerSkin ${steam64Id} ${option}`)
             }
-
-
 
 
 
@@ -220,7 +206,7 @@ function textPrompt(type, goBack) {
         inquirer.prompt([{
             message: "",
             type: "input",
-            name: "input " + type,
+            name: "input",
         }, ]).then(selected => {
             (async() => {
                 if (type === 'int' && selected.input.match(/^\d+$/)) {
@@ -232,6 +218,9 @@ function textPrompt(type, goBack) {
                 } else {
                     resolve(false)
                 }
+
+
+
             })();
         });
     });
@@ -239,24 +228,13 @@ function textPrompt(type, goBack) {
 
 }
 
-function anyPrompt(type, goBack) {
-    return new Promise(resolve => {
-        inquirer.prompt([{
-            message: "enter " + type,
-            type: "input",
-            name: "input",
-        }, ]).then(selected => {
-            (async() => {
-                resolve(selected.input)
-            })();
-        });
-    });
-}
 
 function reconnect(socket) {
     //reconnect on loss (max retries)
 }
 
+
+//mark couldnt get authentication method to use json
 function spinServer(server) {
     return new Promise(resolve => {
         socket = net.Socket();
@@ -265,13 +243,15 @@ function spinServer(server) {
             console.log(err)
             resolve(false)
         });
-        socket.write(server.password + '\r\n')
-        socket.once('data', function(data) {
+        socket.on('data', function(data) {
+            if (data.toString().startsWith('Password:')) {
+                socket.write(server.password)
+                console.log(data.toString())
+            }
             if (data.toString().startsWith('Authenticated=1')) {
-                console.log('Login Successful!');
+                console.log('Logged in!');
                 (async() => {
-                    resolve(socket)
-                        //socket.playerList = testJson
+                    resolve(socket);
                     socket.playerList = await commandHandler(socket, 'RefreshList')
                 })();
                 setInterval(function() {
@@ -279,54 +259,63 @@ function spinServer(server) {
                         socket.playerList = await commandHandler(socket, 'RefreshList')
                     })();
                 }, 60000);
-
-
+            }
+            if (data.toString().startsWith('Authenticated=0')) {
+                console.log('Login wrong!');
             }
         });
     });
 }
 
-
 commands = [{
-    "name": "SwitchMap",
-    "params": ["map", "mod"]
-}, {
-    "name": "ResetSND",
-    "params": []
-}, {
-    "name": "RotateMap",
-    "params": []
-}, {
-    "name": "Kick",
-    "params": ["steamid"]
-}, {
-    "name": "Ban",
-    "params": ["steamid"]
-}, {
-    "name": "Unban",
-    "params": ["steamid"]
-}, {
-    "name": "SwitchTeam",
-    "params": ["steamid", "teamid"]
-}, {
-    "name": "GiveItem",
-    "params": ["steamid", "itemid"]
-}, {
-    "name": "GiveCash",
-    "params": ["steamid", "CashAmt"]
-}, {
-    "name": "GiveTeamCash",
-    "params": ["steamid", "CashAmt"]
-}, {
-    "name": "InspectPlayer",
-    "params": ["steamid"]
-}, {
-    "name": "ServerInfo",
-    "params": []
-}, {
-    "name": "Disconnect",
-    "params": []
-}, {
-    "name": "RefreshList",
-    "params": []
-}];
+        "name": "SetPlayerSkin",
+        "params": ["steamid", "skinid"]
+    },
+    {
+        "name": "SetLimitedAmmoType",
+        "params": ["number"]
+    },
+    {
+        "name": "SwitchMap",
+        "params": ["map", "mod"]
+    }, {
+        "name": "ResetSND",
+        "params": []
+    }, {
+        "name": "RotateMap",
+        "params": []
+    }, {
+        "name": "Kick",
+        "params": ["steamid"]
+    }, {
+        "name": "Ban",
+        "params": ["steamid"]
+    }, {
+        "name": "Unban",
+        "params": ["steamid"]
+    }, {
+        "name": "SwitchTeam",
+        "params": ["steamid", "teamid"]
+    }, {
+        "name": "GiveItem",
+        "params": ["steamid", "itemid"]
+    }, {
+        "name": "GiveCash",
+        "params": ["steamid", "CashAmt"]
+    }, {
+        "name": "GiveTeamCash",
+        "params": ["steamid", "CashAmt"]
+    }, {
+        "name": "InspectPlayer",
+        "params": ["steamid"]
+    }, {
+        "name": "ServerInfo",
+        "params": []
+    }, {
+        "name": "Disconnect",
+        "params": []
+    }, {
+        "name": "RefreshList",
+        "params": []
+    }
+];
