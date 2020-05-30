@@ -101,6 +101,19 @@ function commandPrompt(socket) {
                 }
 
             }
+            if (selected.command === 'SwitchMap') {
+                gamemode = await gmPrompt()
+                console.log('Enter MapID | Example: UGC1668673188')
+                mapId = await textPrompt('string', true)
+                if (mapId) {
+                    console.log(commandHandler(socket, `SwitchMap ${mapId} ${gamemode}`))
+                    commandPrompt(socket)
+                } else {
+                    console.log('Something went wrong.')
+                    commandPrompt(socket)
+                }
+
+            }
             if (selected.command === 'GiveItem') {
                 itemName = await textPrompt('string', true)
                 playerPrompt(socket, selected.command, itemName)
@@ -114,17 +127,22 @@ function commandPrompt(socket) {
             }
             if (selected.command === 'ResetSND') {
                 commandHandler(socket, `ResetSND`)
+                commandPrompt(socket)
             }
             if (selected.command === 'GiveCash') {
                 itemName = await textPrompt('int', true)
                 playerPrompt(socket, selected.command, itemName)
+            }
+            if (selected.command === 'RotateMap') {
+                console.log(await commandHandler(socket, 'RotateMap'))
+                commandPrompt(socket)
             }
             if (selected.command === 'ServerInfo') {
                 console.log(await commandHandler(socket, 'ServerInfo'))
                 commandPrompt(socket)
             }
             if (selected.command === 'RefreshList') {
-                await commandHandler(socket, 'RefreshList')
+                console.log(await commandHandler(socket, 'RefreshList'))
                 commandPrompt(socket)
             }
             if (selected.command === 'Disconnect') {
@@ -148,7 +166,7 @@ function playerPrompt(socket, command, option, option2) {
     inquirer.prompt([{
         type: 'list',
         name: 'player',
-        message: 'Select a server',
+        message: 'Select a Player',
         choices: socket.playerList.PlayerList.map(player => player.Username + ' | ' + player.UniqueId),
     }, ]).then(selected => {
         (async() => {
@@ -186,12 +204,26 @@ function playerPrompt(socket, command, option, option2) {
 
 function teamPrompt() {
     return new Promise(resolve => {
-        // find a good delimiter
         inquirer.prompt([{
             type: 'list',
             name: 'team',
             message: 'Select a Team',
             choices: ["Blue Team (Defenders)", "Red Team (Attackers)"],
+        }, ]).then(selected => {
+            (async() => {
+                resolve(selected.team)
+            })();
+        });
+    });
+}
+
+function gmPrompt() {
+    return new Promise(resolve => {
+        inquirer.prompt([{
+            type: 'list',
+            name: 'gamemode',
+            message: 'Select a Gamemode',
+            choices: ["SND", "TDM", "DM", "GUN"],
         }, ]).then(selected => {
             (async() => {
                 resolve(selected.team)
@@ -252,11 +284,11 @@ function spinServer(server) {
                 console.log('Logged in!');
                 (async() => {
                     resolve(socket);
-                    socket.playerList = await commandHandler(socket, 'RefreshList')
+                    socket.playerList = JSON.parse(await commandHandler(socket, 'RefreshList'))
                 })();
                 setInterval(function() {
                     (async() => {
-                        socket.playerList = await commandHandler(socket, 'RefreshList')
+                        socket.playerList = JSON.parse(await commandHandler(socket, 'RefreshList'))
                     })();
                 }, 60000);
             }
